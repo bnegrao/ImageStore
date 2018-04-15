@@ -149,6 +149,10 @@ public class ImageStoreRestControllerTest {
     			.content(imageJson))
     		.andExpect(status().isCreated());    			
     }
+    
+    public void updateProduct() throws Exception {
+    	
+    }
 
     @SuppressWarnings("unchecked")
 	protected String json(Object o) throws IOException {

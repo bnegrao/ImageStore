@@ -10,6 +10,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.validation.constraints.NotNull;
 
 @Entity
 public class Product {
@@ -25,6 +26,7 @@ public class Product {
     
     @ManyToOne(optional = true)	
     @JoinColumn(name="parent_id")
+    @NotNull
     private Product parentProduct;
     
     @SuppressWarnings("unused")

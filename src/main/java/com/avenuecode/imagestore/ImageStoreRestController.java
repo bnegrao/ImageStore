@@ -19,11 +19,11 @@ import com.avenuecode.imagestore.entities.ProductRepository;
 
 /*
  * Endpoints:
- * POST/PUT /{parentId}/product - add/update a product as a child of a parent product identified by {productId}. 
+ * POST /{parentId}/product - adds a product as a child of a parent product identified by {productId}. 
  * The special, '-1' product ID, must be used as the parendID for the root product.
- * POST/PUT /{parentId}/image - add/update an image, as a child of a parent product. * 
- * GET /product/{productId} - retrieves a product by its id
- * GET /image/{imageId} - retrieves an image by its id
+ * POST /{parentId}/image - adds an image, as a child of a parent product. * 
+ * GET/PUT /product/{productId} - retrieves/updates a product by its id
+ * GET/PUT /image/{imageId} - retrieves/updates an image by its id
  */
 
 @RestController
@@ -68,7 +68,6 @@ class ImageStoreRestController {
 	
 	@RequestMapping(method = RequestMethod.POST, value = "{parentId}/product")
 	ResponseEntity<?> addProduct(@PathVariable Long parentId, @RequestBody Product input) {		
-		System.out.println(input);
 
 		return this.productRepository
 				.findById(parentId)
@@ -83,6 +82,25 @@ class ImageStoreRestController {
 				})
 				.orElseThrow(() -> new ProductNotFoundException(parentId));
 	}	
+	
+	@RequestMapping(method = RequestMethod.PUT, value = "/product/{productId}")
+	ResponseEntity<?> updateProduct(@PathVariable Long productId, @RequestBody Product input) {
+		
+		Product product = productRepository.findById(productId).orElseThrow(() -> PNFE(productId));
+		Product parent;
+		if (input.getParentProduct().getId() != product.getParentProduct().getId()) {
+			Long otherParentId = input.getParentProduct().getId();
+			parent = productRepository.findById(otherParentId).orElseThrow(() -> PNFE(otherParentId));
+		} else {
+			parent = product.getParentProduct();
+		}
+		
+		productRepository.save(new Product(parent,input.getName()));	
+		
+		return ResponseEntity.ok().build();
+
+	}
+	
 
 	@RequestMapping(method = RequestMethod.GET, value = "product/{productId}")
 	Product getProduct(@PathVariable Long productId) {
