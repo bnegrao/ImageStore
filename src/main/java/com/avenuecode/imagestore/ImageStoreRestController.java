@@ -19,9 +19,10 @@ import com.avenuecode.imagestore.entities.ImageRepository;
 
 /*
  * Endpoints:
- * PUT /product - adds a new product
+ * POST/PUT /product/{productID}/product - add/update a product as a child of a parent product identified by {productID}. 
+ * The special, '-1' id, must be used as the parendID for the root product.
+ * POST/PUT /product/{productID}/image - add/update an image, as a child of a parent product. * 
  * GET /product/{productID} - retrieves a product by id
- * PUT /product
  */
 
 @RestController
