@@ -1,14 +1,15 @@
 package com.avenuecode.imagestore.entities;
 
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
-import java.util.HashSet;
-import java.util.Set;
 
 @Entity
 public class Product {
@@ -21,14 +22,20 @@ public class Product {
 
     @OneToMany(mappedBy = "product")
     private Set<Image> images = new HashSet<>();
+    
+    @ManyToOne(optional = true)	
+    @JoinColumn(name="parent_id")
+    private Product parentProduct;
+    
+    @SuppressWarnings("unused")
+	private Product() { } // JPA only
 
-    private Product() { } // JPA only
+    public Product(Product parentProduct, String name) {
+    	this.parentProduct = parentProduct;
+    	this.name = name;
+	}
 
-    public Product(final String name, final String password) {
-        this.name = name;
-    }
-
-    public Long getId() {
+	public Long getId() {
         return id;
     }
 
@@ -39,4 +46,12 @@ public class Product {
     public Set<Image> getBookmarks() {
         return images;
     }
+
+	public Product getParentProduct() {
+		return parentProduct;
+	}
+
+	public void setParentProduct(Product parentProduct) {
+		this.parentProduct = parentProduct;
+	}
 }

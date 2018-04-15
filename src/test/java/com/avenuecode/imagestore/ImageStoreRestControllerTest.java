@@ -52,7 +52,8 @@ public class ImageStoreRestControllerTest {
     @SuppressWarnings("rawtypes")
 	private HttpMessageConverter mappingJackson2HttpMessageConverter;
 
-    private Product product;
+    private Product rootProduct;
+	private Image rootImage;
 
     private List<Image> imageList = new ArrayList<>();
 
@@ -84,56 +85,73 @@ public class ImageStoreRestControllerTest {
         this.imageRepository.deleteAllInBatch();
         this.productRepository.deleteAllInBatch();
 
-        this.product = productRepository.save(new Product(userName, "password"));
-        this.imageList.add(imageRepository.save(new Image(product, "http://bookmark.com/1/" + userName, "A description")));
-        this.imageList.add(imageRepository.save(new Image(product, "http://bookmark.com/2/" + userName, "A description")));
+        this.rootProduct = productRepository.save(new Product(null, "rootProduct")); 
+        this.rootImage = imageRepository.save(new Image(rootProduct, "rootImage"));
     }
 
     @Test
-    public void userNotFound() throws Exception {
-        mockMvc.perform(post("/george/bookmarks/")
-                .content(this.json(new Image(null, null, null)))
+    public void productNotFound() throws Exception {
+        mockMvc.perform(post("/1/product/")
+                .content(this.json(new Image(null, null)))
                 .contentType(contentType))
                 .andExpect(status().isNotFound());
     }
 
     @Test
-    public void readSingleBookmark() throws Exception {
-        mockMvc.perform(get("/" + userName + "/bookmarks/"
-                + this.imageList.get(0).getId()))
+    public void getProduct() throws Exception {
+        mockMvc.perform(get("/product/" + rootProduct.getId()))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(contentType))
-                .andExpect(jsonPath("$.id", is(this.imageList.get(0).getId().intValue())))
-                .andExpect(jsonPath("$.uri", is("http://bookmark.com/1/" + userName)))
-                .andExpect(jsonPath("$.description", is("A description")));
+                .andExpect(jsonPath("$.id", is(rootProduct.getId().intValue())))
+                .andExpect(jsonPath("$.name", is(rootProduct.getName())));
+    }
+    
+    @Test
+    public void getImage() throws Exception {
+    	mockMvc.perform(get("/image/" + rootImage.getId()))
+    		.andExpect(status().isOk())
+    		.andExpect(content().contentType(contentType))
+    		.andExpect(jsonPath("$.id", is(rootImage.getId().intValue())))
+    		.andExpect(jsonPath("$.description", is(rootImage.getDescription())));
     }
 
-    @Test
-    public void readBookmarks() throws Exception {
-        mockMvc.perform(get("/" + userName + "/bookmarks"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(contentType))
-                .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[0].id", is(this.imageList.get(0).getId().intValue())))
-                .andExpect(jsonPath("$[0].uri", is("http://bookmark.com/1/" + userName)))
-                .andExpect(jsonPath("$[0].description", is("A description")))
-                .andExpect(jsonPath("$[1].id", is(this.imageList.get(1).getId().intValue())))
-                .andExpect(jsonPath("$[1].uri", is("http://bookmark.com/2/" + userName)))
-                .andExpect(jsonPath("$[1].description", is("A description")));
-    }
+//    @Test
+//    public void readBookmarks() throws Exception {
+//        mockMvc.perform(get("/" + userName + "/bookmarks"))
+//                .andExpect(status().isOk())
+//                .andExpect(content().contentType(contentType))
+//                .andExpect(jsonPath("$", hasSize(2)))
+//                .andExpect(jsonPath("$[0].id", is(this.imageList.get(0).getId().intValue())))
+//                .andExpect(jsonPath("$[0].uri", is("http://bookmark.com/1/" + userName)))
+//                .andExpect(jsonPath("$[0].description", is("A description")))
+//                .andExpect(jsonPath("$[1].id", is(this.imageList.get(1).getId().intValue())))
+//                .andExpect(jsonPath("$[1].uri", is("http://bookmark.com/2/" + userName)))
+//                .andExpect(jsonPath("$[1].description", is("A description")));
+//    }
 
     @Test
-    public void createBookmark() throws Exception {
-        String bookmarkJson = json(new Image(
-                this.product, "http://spring.io", "a bookmark to the best resource for Spring news and information"));
+    public void addChildProduct() throws Exception {
+        String productJson = json(new Product(rootProduct, "dummy-1"));
 
-        this.mockMvc.perform(post("/" + userName + "/bookmarks")
+        this.mockMvc.perform(
+        		post("/" + rootProduct.getId() + "/product")
                 .contentType(contentType)
-                .content(bookmarkJson))
-                .andExpect(status().isCreated());
+                .content(productJson))
+        	.andExpect(status().isCreated());
+    }
+    
+    public void addChildImage() throws Exception {
+    	String imageJson = json(new Image(rootProduct, "img-1"));
+    	
+    	this.mockMvc.perform(
+    			post("/" + rootProduct.getId() + "/image")
+    			.contentType(contentType)
+    			.content(imageJson))
+    		.andExpect(status().isCreated());    			
     }
 
-    protected String json(Object o) throws IOException {
+    @SuppressWarnings("unchecked")
+	protected String json(Object o) throws IOException {
         MockHttpOutputMessage mockHttpOutputMessage = new MockHttpOutputMessage();
         this.mappingJackson2HttpMessageConverter.write(
                 o, MediaType.APPLICATION_JSON, mockHttpOutputMessage);

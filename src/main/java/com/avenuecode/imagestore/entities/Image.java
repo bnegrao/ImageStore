@@ -18,19 +18,17 @@ public class Image {
     @ManyToOne
     private Product product;
 
-    private String uri;
-
     private String description;
 
     private Image() { } // JPA only
 
-    public Image(final Product product, final String uri, final String description) {
-        this.uri = uri;
+    public Image(final Product product, final String description) {
         this.description = description;
         this.product = product;
     }
 
-    public Long getId() {
+
+	public Long getId() {
         return id;
     }
 
@@ -38,9 +36,6 @@ public class Image {
         return product;
     }
 
-    public String getUri() {
-        return uri;
-    }
 
     public String getDescription() {
         return description;
@@ -48,7 +43,7 @@ public class Image {
 
 	@Override
 	public String toString() {
-		return "Image [id=" + id + ", product=" + product + ", uri=" + uri + ", description=" + description + "]";
+		return "Image [id=" + id + ", product=" + product + ", description=" + description + "]";
 	}
 
 	public void setId(Long id) {
@@ -57,10 +52,6 @@ public class Image {
 
 	public void setProduct(Product product) {
 		this.product = product;
-	}
-
-	public void setUri(String uri) {
-		this.uri = uri;
 	}
 
 	public void setDescription(String description) {

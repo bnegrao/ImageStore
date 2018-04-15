@@ -20,20 +20,15 @@ public class ImageStoreApplication {
 		SpringApplication.run(ImageStoreApplication.class, args);
 	}
 
+	/*
+	 * creates the root product
+	 */
 	@Bean
 	CommandLineRunner init(ProductRepository productRepository,
 			ImageRepository imageRepository) {
-		return (evt) -> Arrays.asList(
-				"jhoeller,bnegrao,dsyer,pwebb,ogierke,rwinch,mfisher,mpollack,jlong".split(","))
-				.forEach(
-						a -> {
-							Product product = productRepository.save(new Product(a,
-									"password"));
-							imageRepository.save(new Image(product,
-									"http://bookmark.com/1/" + a, "A description"));
-							imageRepository.save(new Image(product,
-									"http://bookmark.com/2/" + a, "A description"));
-						});
+		return (evt) -> {		
+			productRepository.save(new Product (null, "rootProduct"));
+		};
 	}
 
 }
