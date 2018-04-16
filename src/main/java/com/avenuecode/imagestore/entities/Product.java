@@ -27,35 +27,21 @@ public class Product {
     @OneToMany()
     private Set<Product> products = new HashSet<Product>();
     
-    @ManyToOne(optional = true, cascade={CascadeType.ALL})	
-    @JoinColumn(name="parent_id")
-    private Product parentProduct;
+    private Long parentId;
     
     @SuppressWarnings("unused")
 	private Product() { } // JPA only
 
     /**
      * 
-     * @param parentProduct Reference to the parent of this product. If parentProduct is null, that means this is the "rootProduct"
+     * @param The id of the parent product. If parentId is null, that means this is the "rootProduct"
      * @param name name of the product.
      */
-    public Product(Product parentProduct, String name) {
-    	this.parentProduct = parentProduct;
+    public Product(Long parentId, String name) {
+    	this.parentId = parentId;
     	this.name = name;
 	}
-    
-    /**
-     * Returns a clone of the origin object
-     * @param origin
-     */
-    public Product(Product origin) {
-    	this.id = origin.id;
-    	this.images = new HashSet<Image>(origin.images);
-    	this.name = origin.name;
-    	this.parentProduct = origin.parentProduct;
-    	this.products = new HashSet<Product>(origin.products);
-    }
-
+  
 	public Long getId() {
         return id;
     }
@@ -68,12 +54,12 @@ public class Product {
         return images;
     }
 
-	public Product getParentProduct() {
-		return parentProduct;
+	public Long getParentId() {
+		return parentId;
 	}
 
-	public void setParentProduct(Product parentProduct) {
-		this.parentProduct = parentProduct;
+	public void setParentId(Long parentId) {
+		this.parentId = parentId;
 	}
 	
 	public Set<Product> getProducts() {

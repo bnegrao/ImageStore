@@ -47,15 +47,13 @@ public class ImageStoreRestControllerTest {
 
     private MockMvc mockMvc;
 
-    private String userName = "bdussault";
-
     @SuppressWarnings("rawtypes")
 	private HttpMessageConverter mappingJackson2HttpMessageConverter;
 
     private Product rootProduct;
 	private Image rootImage;
 
-    private List<Image> imageList = new ArrayList<>();
+    private List<Product> productList = new ArrayList<Product>();
 
     @Autowired
     private ImageRepository imageRepository;
@@ -93,9 +91,11 @@ public class ImageStoreRestControllerTest {
 
         this.rootProduct = productRepository.save(new Product(null, "rootProduct")); 
         this.rootImage = imageRepository.save(new Image(rootProduct, "rootImage"));
-        this.childProduct1 = productRepository.save(new Product (rootProduct, "childProduct1"));
-        this.childProduct2 = productRepository.save(new Product (rootProduct, "childProduct2"));
+        this.childProduct1 = productRepository.save(new Product (rootProduct.getId(), "childProduct1"));
+        this.childProduct2 = productRepository.save(new Product (rootProduct.getId(), "childProduct2"));
         this.childImage1 = imageRepository.save(new Image (childProduct1, "childImage1"));
+        
+        this.productList = productRepository.findAll();
     }
 
     @Test
@@ -108,11 +108,16 @@ public class ImageStoreRestControllerTest {
 
     @Test
     public void getProduct() throws Exception {
-        mockMvc.perform(get("/product/" + rootProduct.getId()))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(contentType))
-                .andExpect(jsonPath("$.id", is(rootProduct.getId().intValue())))
-                .andExpect(jsonPath("$.name", is(rootProduct.getName())));
+    		getProduct(rootProduct);
+    }
+    
+    private void getProduct(Product product) throws Exception {    	    	    	
+        mockMvc.perform(get("/product/" + product.getId()))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(contentType))
+        .andExpect(jsonPath("$.id", is(product.getId().intValue())))
+        .andExpect(jsonPath("$.parentId", is(product.getParentId() == null ? null : product.getParentId().intValue())))
+        .andExpect(jsonPath("$.name", is(product.getName())));
     }
     
     @Test
@@ -122,6 +127,17 @@ public class ImageStoreRestControllerTest {
     		.andExpect(content().contentType(contentType))
     		.andExpect(jsonPath("$.id", is(rootImage.getId().intValue())))
     		.andExpect(jsonPath("$.description", is(rootImage.getDescription())));
+    }
+    
+    @Test
+    public void getAllProducts() throws Exception {
+    	mockMvc.perform(get("/products"))
+    	.andExpect(status().isOk())
+    	.andExpect(content().contentType(contentType))
+        .andExpect(jsonPath("$", hasSize(3)))
+        .andExpect(jsonPath("$[0].id", is(this.productList.get(0).getId().intValue())))
+        .andExpect(jsonPath("$[1].id", is(this.productList.get(1).getId().intValue())))
+        .andExpect(jsonPath("$[2].id", is(this.productList.get(2).getId().intValue())));
     }
 
 //    @Test
@@ -140,7 +156,7 @@ public class ImageStoreRestControllerTest {
 
     @Test
     public void addChildProduct() throws Exception {
-        String productJson = json(new Product(rootProduct, "dummy-1"));
+        String productJson = json(new Product(rootProduct.getId(), "dummy-1"));
 
         this.mockMvc.perform(
         		post("/" + rootProduct.getId() + "/product")
@@ -160,20 +176,68 @@ public class ImageStoreRestControllerTest {
     		.andExpect(status().isCreated());    			
     }
     
+    /**
+     * changes the name of an existing product, save in on the db, then retrieve it from the db
+     * to verify that the new name was really saved.
+     * @throws Exception
+     */
     @Test
     public void updateNameInExistingProduct() throws Exception {
-    	String newName = "trickyThing";
-    	Product clone = new Product(childProduct1);
-    	clone.setName(newName);
+    	// changing the name
+    	childProduct1.setName("trickyThing");
     	
-    	String productJson = json(clone);
+    	String productJson = json(childProduct1);
     	
     	this.mockMvc.perform(
-    			put("/product/" + clone.getId())
+    			put("/product/" + childProduct1.getId())
     			.contentType(contentType)
     			.content(productJson)
     			).andExpect(status().isOk());
+    	
+    	// retrieve the product from the database and certify that it was updated.
+    	getProduct(childProduct1);
     }
+    
+    /**
+     * Make childProduct2 be son of childProduct1 instead of the rootProduct.
+     * @throws Exception
+     */
+    @Test
+    public void updateParentIdInExistingProduct() throws Exception {    	
+    	// changing the parentId
+    	childProduct2.setParentId(childProduct1.getId());
+    	
+    	String productJson = json(childProduct2);
+    	
+    	this.mockMvc.perform(
+    			put("/product/" + childProduct2.getId())
+    			.contentType(contentType)
+    			.content(productJson)
+    			).andExpect(status().isOk());
+    	
+    	// retrieve the product from the database and certify that it was updated.
+    	getProduct(childProduct2);    	
+    	
+    }
+    
+    /**
+     * Tries to change the parentId of an existing product to an inexistent product. Should return 400 Bad Request
+     * @throws Exception
+     */
+    @Test
+    public void updateProductToUnexistentParentId() throws Exception {
+    	// changing the parentId to an inexistent id
+    	childProduct2.setParentId(999L);    	
+
+    	String productJson = json(childProduct2);
+    	
+    	this.mockMvc.perform(
+    			put("/product/" + childProduct2.getId())
+    			.contentType(contentType)
+    			.content(productJson)
+    			).andExpect(status().isBadRequest());
+    }
+    
 
     @SuppressWarnings("unchecked")
 	protected String json(Object o) throws IOException {
