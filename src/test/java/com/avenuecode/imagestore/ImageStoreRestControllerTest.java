@@ -66,6 +66,12 @@ public class ImageStoreRestControllerTest {
     @Autowired
     private ProductRepository productRepository;
 
+	private Product childProduct1;
+
+	private Image childImage1;
+
+	private Product childProduct2;
+
     @Autowired
     void setConverters(HttpMessageConverter<?>[] converters) {
 
@@ -87,6 +93,9 @@ public class ImageStoreRestControllerTest {
 
         this.rootProduct = productRepository.save(new Product(null, "rootProduct")); 
         this.rootImage = imageRepository.save(new Image(rootProduct, "rootImage"));
+        this.childProduct1 = productRepository.save(new Product (rootProduct, "childProduct1"));
+        this.childProduct2 = productRepository.save(new Product (rootProduct, "childProduct2"));
+        this.childImage1 = imageRepository.save(new Image (childProduct1, "childImage1"));
     }
 
     @Test
@@ -140,6 +149,7 @@ public class ImageStoreRestControllerTest {
         	.andExpect(status().isCreated());
     }
     
+    @Test
     public void addChildImage() throws Exception {
     	String imageJson = json(new Image(rootProduct, "img-1"));
     	
@@ -150,8 +160,19 @@ public class ImageStoreRestControllerTest {
     		.andExpect(status().isCreated());    			
     }
     
-    public void updateProduct() throws Exception {
+    @Test
+    public void updateNameInExistingProduct() throws Exception {
+    	String newName = "trickyThing";
+    	Product clone = new Product(childProduct1);
+    	clone.setName(newName);
     	
+    	String productJson = json(clone);
+    	
+    	this.mockMvc.perform(
+    			put("/product/" + clone.getId())
+    			.contentType(contentType)
+    			.content(productJson)
+    			).andExpect(status().isOk());
     }
 
     @SuppressWarnings("unchecked")

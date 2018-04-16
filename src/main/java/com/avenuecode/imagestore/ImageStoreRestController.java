@@ -75,7 +75,7 @@ class ImageStoreRestController {
 					Product result = productRepository.save(new Product(parentProduct,input.getName()));
 
 					URI location = ServletUriComponentsBuilder
-						.fromCurrentRequest().path("/{id}")
+						.fromCurrentRequest().replacePath("/product/{id}")
 						.buildAndExpand(result.getId()).toUri();
 
 					return ResponseEntity.created(location).build();
