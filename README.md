@@ -13,12 +13,12 @@ Once you unzipped the application source to a local folder, cd to the root folde
 
 **GET /products**  
 **Description:** retrieves all products. By default, it won't retrieve child products or images.  
-**Url Params:** Optional: `includeRelationship=[image[,product]]`. If present the API to show the sets of child images and/or products.  Ex: `GET /products?includeRelationship=image,product`
+**Url Params:** Optional: `includeRelationship=[image[,product]]`. If present the API to show the sets of child images and/or products.  Ex: `GET /products?includeRelationship=image,product`  
 **Response Codes:** 200 - Success. 200 - In case there are no products at all it's returned an json with an empty list.
 
 **GET /products/{productId}**  
 **Description:** retrieves a product identified by {productId}  
-**Url Params:** Optional: `includeRelationship=[image[,product]]`. If present the API to show the sets of child images and/or products.  Ex: `GET /products/1?includeRelationship=product,image`
+**Url Params:** Optional: `includeRelationship=[image[,product]]`. If present the API to show the sets of child images and/or products.  Ex: `GET /products/1?includeRelationship=product,image`  
 **Response Codes:** 200 - Success. 400 - Product Not Found.
 
 **POST /products/{productId}**  
