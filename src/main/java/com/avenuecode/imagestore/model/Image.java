@@ -1,4 +1,4 @@
-package com.avenuecode.imagestore.entities;
+package com.avenuecode.imagestore.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 

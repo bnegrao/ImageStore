@@ -20,6 +20,7 @@ Once you downloaded the application source to a local folder, cd to the root fol
 **Description:** retrieves a product identified by {productId}  
 **Url Params:** Optional: `includeRelationship=[image[,product]]`. If present the API to show the sets of child images and/or products.  Ex: `GET /products/1?includeRelationship=product,image`  
 **Response Codes:** 200 - Success. 400 - Product Not Found.
+**Response Data:** Ex: `{"id":1,"name":"rootProduct","parentId":null,"childImageIds":[2],"childProductIds":[3,4]}`
 
 **POST /products/{productId}**  
 **Description:** adds a new product as child of the product identified by {productId}  

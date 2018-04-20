@@ -1,4 +1,4 @@
-package com.avenuecode.imagestore.entities;
+package com.avenuecode.imagestore.model;
 
 
 import java.util.HashSet;
@@ -9,11 +9,11 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 
 import com.avenuecode.imagestore.Views;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
 
 @Entity
@@ -29,11 +29,11 @@ public class Product {
     private String name;
 
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JsonView(Views.Images.class)
+    @JsonIgnore
     private Set<Image> images = new HashSet<Image>();
     
     @OneToMany(mappedBy = "parentId", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JsonView(Views.Products.class)
+    @JsonIgnore
     private Set<Product> products = new HashSet<Product>();
     
     @JsonView(Views.Basic.class)
@@ -78,5 +78,26 @@ public class Product {
 
 	public void setName(String newName) {
 		this.name = newName;		
+	}
+	
+	@JsonView(Views.Images.class)
+	public Long[] getChildImageIds () {
+		Long [] ids = new Long[this.images.size()];
+		int i = 0;
+		for (Image image: this.images) {
+			ids[i++] = image.getId();
+		}
+		
+		return ids;
+	}
+	
+	@JsonView(Views.Products.class)
+	public Long[] getChildProductIds () {
+		Long [] ids = new Long[this.products.size()];
+		int i = 0;
+		for (Product product: this.products) {
+			ids[i++] = product.getId();
+		}
+		return ids;
 	}	
 }

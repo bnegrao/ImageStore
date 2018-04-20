@@ -1,5 +1,23 @@
 package com.avenuecode.imagestore;
 
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertNotNull;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
+
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -9,36 +27,24 @@ import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.mock.http.MockHttpOutputMessage;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.context.WebApplicationContext;
 
-import com.avenuecode.imagestore.Application;
-import com.avenuecode.imagestore.entities.Product;
-import com.avenuecode.imagestore.entities.ProductRepository;
-import com.avenuecode.imagestore.entities.Image;
-import com.avenuecode.imagestore.entities.ImageRepository;
+import com.avenuecode.imagestore.model.Image;
+import com.avenuecode.imagestore.model.Product;
+import com.avenuecode.imagestore.services.ImageRepository;
+import com.avenuecode.imagestore.services.ProductRepository;
+import com.avenuecode.imagestore.services.ProductService;
 
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.test.web.servlet.setup.MockMvcBuilders.*;
-
-/**
- * @author Josh Long
- */
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = Application.class)
-@WebAppConfiguration
-public class TestImageStoreRestController {
+@EnableTransactionManagement
+public class TestController {
 
 
     private MediaType contentType = new MediaType(MediaType.APPLICATION_JSON.getType(),
@@ -63,6 +69,9 @@ public class TestImageStoreRestController {
 
     @Autowired
     private ProductRepository productRepository;
+    
+    @Autowired
+    private ProductService productService;
 
 	private Product childProduct1;
 
@@ -100,28 +109,24 @@ public class TestImageStoreRestController {
         
         this.productList = productRepository.findAll();    	
     }
-
-    @Test
-    public void productNotFound() throws Exception {
-        mockMvc.perform(post("/1/product/")
-                .content(this.json(new Image(null, null)))
-                .contentType(contentType))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    public void getProduct() throws Exception {
-    		getProduct(rootProduct);
-    }
     
-    private void getProduct(Product product) throws Exception {    	    	    	
-        mockMvc.perform(get("/products/" + product.getId()))
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(contentType))
-        .andExpect(jsonPath("$.id", is(product.getId().intValue())))
-        .andExpect(jsonPath("$.parentId", is(product.getParentId() == null ? null : product.getParentId().intValue())))
-        .andExpect(jsonPath("$.name", is(product.getName())));
-    }
+    
+    /**
+     * retrieving all products with relationships
+     */
+    @Test
+    public void getAllProductsWithRelationships() throws Exception {
+    	mockMvc.perform(get("/products" + "?includeRelationship=product,image"))
+    	.andExpect(status().isOk())
+    	.andExpect(content().contentType(contentType))
+    	.andExpect(jsonPath("$[0].childProductIds", hasSize(2)))
+    	.andExpect(jsonPath("$[0].childImageIds",hasSize(1)))
+    	.andExpect(jsonPath("$[1].childProductIds", hasSize(0)))
+    	.andExpect(jsonPath("$[1].childImageIds",hasSize(1)))
+    	.andExpect(jsonPath("$[2].childProductIds", hasSize(0)))
+    	.andExpect(jsonPath("$[2].childImageIds",hasSize(0)));  	    			
+    }    
+
     
     @Test
     public void getAllImages() throws Exception {
@@ -158,28 +163,36 @@ public class TestImageStoreRestController {
         .andExpect(jsonPath("$[2].id", is(this.productList.get(2).getId().intValue())));
     }
     
+
     
-    /**
-     * When retrieving all products without relationships, the "products" and "images" should
-     * not be present in the json.
-     */
+    
     @Test
-    public void getAllProductsWithoutRelationships() throws Exception {
-    	mockMvc.perform(get("/products"))
-    	.andExpect(status().isOk())
-    	.andExpect(content().contentType(contentType))
-    	.andExpect(jsonPath("$[0].products").doesNotExist())
-    	.andExpect(jsonPath("$[0].images").doesNotExist());    	
+    public void getProduct() throws Exception {
+    		getProduct(rootProduct);
     }
     
+    private void getProduct(Product product) throws Exception {    	    	    	
+        mockMvc.perform(get("/products/" + product.getId()))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(contentType))
+        .andExpect(jsonPath("$.id", is(product.getId().intValue())))
+        .andExpect(jsonPath("$.parentId", is(product.getParentId() == null ? null : product.getParentId().intValue())))
+        .andExpect(jsonPath("$.name", is(product.getName())));
+    }
+    
+    /**
+     * Test loading of a product and its child sub-components
+     * @throws Exception
+     */
     @Test
-    public void getAllProductsWithSubproducts() throws Exception {
-    	mockMvc.perform(get("/products/?includeRelatioship=product"))
+    public void getProductWithRelationship() throws Exception {
+    	mockMvc.perform(get("/products/" + rootProduct.getId() + "?includeRelationship=product,image"))
     	.andExpect(status().isOk())
     	.andExpect(content().contentType(contentType))
-    	.andExpect(jsonPath("$[0].products").isArray())
-    	.andExpect(jsonPath("$[0].products", hasSize(2)))
-    	.andExpect(jsonPath("$[0].images").doesNotExist());    	
+    	.andExpect(jsonPath("$.childProductIds").isArray())
+    	.andExpect(jsonPath("$.childProductIds", hasSize(2)))
+    	.andExpect(jsonPath("$.childImageIds").isArray())
+    	.andExpect(jsonPath("$.childImageIds", hasSize(1)));    	
     }    
 
     /**

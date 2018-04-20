@@ -4,9 +4,7 @@ import java.net.URI;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,10 +14,11 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import com.avenuecode.imagestore.entities.Image;
-import com.avenuecode.imagestore.entities.ImageRepository;
-import com.avenuecode.imagestore.entities.Product;
-import com.avenuecode.imagestore.entities.ProductRepository;
+import com.avenuecode.imagestore.model.Image;
+import com.avenuecode.imagestore.model.Product;
+import com.avenuecode.imagestore.services.ImageRepository;
+import com.avenuecode.imagestore.services.ProductRepository;
+import com.avenuecode.imagestore.services.ProductService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -32,12 +31,16 @@ class Controller {
 	private final ImageRepository imageRepository;
 
 	private final ProductRepository productRepository;
+	
+	private final ProductService productService;
 
 	@Autowired
 	Controller(ImageRepository imageRepository,
-						   ProductRepository productRepository, MappingJackson2HttpMessageConverter converter) {
+						   ProductRepository productRepository,
+							ProductService productService) {
 		this.imageRepository = imageRepository;
 		this.productRepository = productRepository;
+		this.productService = productService;
 
 	}
 
@@ -111,11 +114,31 @@ class Controller {
 		return this.imageRepository.findAll();
 	}	
 	
+//	@RequestMapping(method = RequestMethod.GET, value = "products/{productId}", produces="application/json;charset=UTF-8")
+//	@ResponseBody
+//	String getProduct(@PathVariable Long productId, @RequestParam(value="includeRelationship", required=false) String includeRelationship) throws JsonProcessingException, ProductNotFoundException {			
+//		return writeJson (includeRelationship, this.productRepository.findById(productId).orElseThrow(() -> new ProductNotFoundException(productId)));				
+//	}
+	
 	@RequestMapping(method = RequestMethod.GET, value = "products/{productId}", produces="application/json;charset=UTF-8")
 	@ResponseBody
 	String getProduct(@PathVariable Long productId, @RequestParam(value="includeRelationship", required=false) String includeRelationship) throws JsonProcessingException, ProductNotFoundException {			
-		return writeJson (includeRelationship, this.productRepository.findById(productId).orElseThrow(() -> new ProductNotFoundException(productId)));				
-	}
+		boolean loadChildImages = false;
+		boolean loadChildProducts = false;
+		if (includeRelationship != null) {
+			if (includeRelationship.contains("product")) {
+				loadChildProducts = true;
+			}
+			if (includeRelationship.contains("image")) {
+				loadChildImages = true;
+			}
+		}	
+		
+		
+		Product product = this.productService.getProductWithRelationships(productId, loadChildProducts, loadChildImages);
+		
+		return writeJson(product, loadChildProducts, loadChildImages);			
+	}	
 	
 	
 	/**
@@ -127,10 +150,6 @@ class Controller {
 	@RequestMapping(method = RequestMethod.GET, value = "products", produces="application/json;charset=UTF-8")
 	@ResponseBody
 	String getAllProducts(@RequestParam(value="includeRelationship", required=false) String includeRelationship) throws JsonProcessingException {	
-		return writeJson (includeRelationship, this.productRepository.findAll());
-	}	
-	
-	private String writeJson(String includeRelationship, Object value) throws JsonProcessingException {
 		boolean loadChildImages = false;
 		boolean loadChildProducts = false;
 		if (includeRelationship != null) {
@@ -140,7 +159,13 @@ class Controller {
 			if (includeRelationship.contains("image")) {
 				loadChildImages = true;
 			}
-		}		
+		}	
+		
+		List<Product> allProds = this.productService.getAllProductsWithRelationships(loadChildProducts, loadChildImages);
+		return writeJson (allProds, loadChildProducts, loadChildImages);
+	}	
+	
+	private String writeJson(Object value, boolean loadChildProducts, boolean loadChildImages) throws JsonProcessingException {	
 		
 		ObjectMapper objectMapper = new ObjectMapper();
 		ObjectWriter objectWriter = objectMapper.writerWithView(Views.chooseViewFor(loadChildProducts, loadChildImages)); 

@@ -1,6 +1,8 @@
-package com.avenuecode.imagestore.entities;
+package com.avenuecode.imagestore.services;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.avenuecode.imagestore.model.Image;
 
 import java.util.Collection;
 
