@@ -2,8 +2,10 @@ package com.avenuecode.imagestore.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
@@ -12,6 +14,7 @@ public class Image {
 
     @Id
     @GeneratedValue
+    @Column(name="id")
     private Long id;
 
     @JsonIgnore
@@ -41,11 +44,6 @@ public class Image {
         return description;
     }
 
-	@Override
-	public String toString() {
-		return "Image [id=" + id + ", product=" + product + ", description=" + description + "]";
-	}
-
 	public void setId(Long id) {
 		this.id = id;
 	}
@@ -57,6 +55,9 @@ public class Image {
 	public void setDescription(String description) {
 		this.description = description;
 	}
-    
+
+	public Long getParentId() {
+		return product.getId();
+	}
     
 }

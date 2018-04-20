@@ -14,10 +14,10 @@ import com.avenuecode.imagestore.entities.ImageRepository;
 import java.util.Arrays;
 
 @SpringBootApplication
-public class ImageStoreApplication {
+public class Application {
 
 	public static void main(String[] args) {
-		SpringApplication.run(ImageStoreApplication.class, args);
+		SpringApplication.run(Application.class, args);
 	}
 
 	/*

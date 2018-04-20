@@ -5,28 +5,38 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+
+import com.avenuecode.imagestore.Views;
+import com.fasterxml.jackson.annotation.JsonView;
 
 @Entity
 public class Product {
 
+    @JsonView(Views.Basic.class)
     @Id
     @GeneratedValue
+    @Column(name="id")
     private Long id;
 
+    @JsonView(Views.Basic.class)
     private String name;
 
-    @OneToMany(mappedBy = "product")
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JsonView(Views.Images.class)
     private Set<Image> images = new HashSet<Image>();
     
-    @OneToMany()
+    @OneToMany(mappedBy = "parentId", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JsonView(Views.Products.class)
     private Set<Product> products = new HashSet<Product>();
     
+    @JsonView(Views.Basic.class)
     private Long parentId;
     
     @SuppressWarnings("unused")
@@ -68,5 +78,5 @@ public class Product {
 
 	public void setName(String newName) {
 		this.name = newName;		
-	}
+	}	
 }
