@@ -5,11 +5,11 @@ Conceptual REST application in Java Spring to store a hirerachy of "Image Produc
 
 Once you unzipped the application source to a local folder, cd to the root folder where the pom.xml file is and run the following commands:
 
-**To compile the app:** `mvn compile`  
-**To run the tests:** `mvn test`  
-**To run the app:** `mvn spring-boot:run`
+**compile the app:** `mvn compile`  
+**run the tests:** `mvn test`  
+**run the app:** `mvn spring-boot:run`
 
-### Endpoints
+### API Endpoints
 
 **GET /products**  
 **Description:** retrieves all products. By default, it won't retrieve child products or images.  
