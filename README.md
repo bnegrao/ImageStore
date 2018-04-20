@@ -14,18 +14,22 @@ Once you downloaded the application source to a local folder, cd to the root fol
 **GET /products**  
 **Description:** retrieves all products. By default, it won't retrieve child products or images.  
 **Url Params:** Optional: `includeRelationship=[image[,product]]`. If present the API to show the sets of child images and/or products.  Ex: `GET /products?includeRelationship=image,product`  
-**Response Codes:** 200 - Success. 200 - In case there are no products at all it's returned an json with an empty list.
+**Response Codes:** 200 - Success. 200 - In case there are no products at all it's returned an json with an empty list.  
+**Response Data:**
+- Example without relationships: `[{"id":1,"name":"rootProduct","parentId":null},{"id":7,"name":"product","parentId":1}]`
+- Example with relationships: `[{"id":1,"name":"rootProduct","parentId":null,"childImageIds":[11,4,12,5],"childProductIds":[7]},{"id":7,"name":"product","parentId":1,"childImageIds":[],"childProductIds":[]}]` 
+
 
 **GET /products/{productId}**  
 **Description:** retrieves a product identified by {productId}  
 **Url Params:** Optional: `includeRelationship=[image[,product]]`. If present the API to show the sets of child images and/or products.  Ex: `GET /products/1?includeRelationship=product,image`  
-**Response Codes:** 200 - Success. 400 - Product Not Found.
+**Response Codes:** 200 - Success. 400 - Product Not Found.  
 **Response Data:** Ex: `{"id":1,"name":"rootProduct","parentId":null,"childImageIds":[2],"childProductIds":[3,4]}`
 
 **POST /products/{productId}**  
 **Description:** adds a new product as child of the product identified by {productId}  
 **Data params**: Ex: `{  "name": "newProductName" } `   
-**Response Codes:** 201 - Created. 400 - The parent product {productId} was not found in the system.  
+**Response Codes:** 201 - Created. 400 - The parent product {productId} was not found in the system.   
 **Response Headers:** the __Location__ response header shows the URL to access the created object.   
 
 **PUT /products/{productId}**   
